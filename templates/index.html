@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌴 SQL Island Survival Game 🌴</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #69aae4; }
+    h1 { color: #3ac93a; }
+    button { margin: 5px; padding: 10px; background-color: #c38bd4; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    table { border-collapse: collapse; margin-top: 15px; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    th { background-color: #f0f0f0; }
+    #player-status, #inventory { margin: 10px 0; padding: 10px; border: 1px solid #ccc; background: #f8fff8; }
+  </style>
+</head>
+<body>
+  <h1>🌴 SQL Quest 🌴</h1>
+  <p>Type your SQL query below to survive! 🌴</p>
+
+  
+  <form id="query-form">
+    <textarea name="query" id="query" rows="4" placeholder="e.g. SELECT * FROM plants WHERE is_edible = 1;"></textarea><br>
+    <button type="submit">Run Query🌴</button>
+  </form>
+
+  <div id="result"></div>
+
+  <h2>🧑‍💻 Player Status</h2>
+  <button id="check-status">Check Player Status🌴</button>
+  <div id="player-status">Click above to load your status. 🌴</div>
+
+  <h2>🎒 Inventory</h2>
+  <button id="check-inventory">Check Inventory</button>
+  <div id="inventory">Click above to view your items.</div>
+
+  <h2>⚔️ Actions</h2>
+  <button onclick="window.location.href='/battle'">Battle an Enemy</button>
+  <button onclick="completeQuest('Find the ancient sword')">Complete 'Ancient Sword' Quest</button>
+
+  <script>
+    
+    document.getElementById('query-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const response = await fetch('/run_query', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      const resultDiv = document.getElementById('result');
+
+      if (data.success) {
+        resultDiv.innerHTML = `<p>${data.message}</p>`;
+        if (data.result.length > 0) {
+          let table = '<table><tr>';
+          Object.keys(data.result[0]).forEach(col => {
+            table += `<th>${col}</th>`;
+          });
+          table += '</tr>';
+          data.result.forEach(row => {
+            table += '<tr>';
+            Object.values(row).forEach(val => {
+              table += `<td>${val}</td>`;
+            });
+            table += '</tr>';
+          });
+          table += '</table>';
+          resultDiv.innerHTML += table;
+        }
+      } else {
+        resultDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+      }
+    }
+
+    
+    document.getElementById('check-status').onclick = async function() {
+      const response = await fetch('/api/player_status');
+      const data = await response.json();
+      const statusDiv = document.getElementById('player-status');
+
+      if (data.error) {
+        statusDiv.innerHTML = `<p style="color:red;">${data.error}</p>`;
+      } else {
+        statusDiv.innerHTML = `
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Health:</strong> ${data.health}</p>
+          <p><strong>Score:</strong> ${data.score}</p>
+          <p><strong>Level:</strong> ${data.level}</p>
+          <p><strong>Quests Completed:</strong> ${data.quests_completed}</p>
+        `;
+
+        if (data.score >= 200) {
+          alert("🎉 Congratulations! You've leveled up!");
+        }
+      }
+    }
+
+  
+    document.getElementById('check-inventory').onclick = async function() {
+      const response = await fetch('/api/inventory');
+      const items = await response.json();
+      const inventoryDiv = document.getElementById('inventory');
+
+      if (items.length === 0) {
+        inventoryDiv.innerHTML = `<p>Your inventory is empty.</p>`;
+      } else {
+        let table = '<table><tr><th>Item</th><th>Quantity</th></tr>';
+        items.forEach(item => {
+          table += `<tr><td>${item.item_name}</td><td>${item.quantity}</td></tr>`;
+        });
+        table += '</table>';
+        inventoryDiv.innerHTML = table;
+      }
+    }
+
+    
+    function completeQuest(questName) {
+      window.location.href = '/complete_quest/' + encodeURIComponent(questName);
+    }
+  </script>
+</body>
+</html>
+
+

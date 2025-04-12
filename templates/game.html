@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <title>SQL Island</title>
+</head>
+<body>
+  <h2>Welcome, {{ user['username'] }} | Level: {{ user['level'] }} | Score: {{ user['score'] }}</h2>
+  <a href="/logout">Logout</a>
+
+  <h3>Your Inventory:</h3>
+  <ul>
+    {% for item in inventory %}
+      <li>{{ item['item'] }}: {{ item['quantity'] }}</li>
+    {% else %}
+      <li>Empty</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Actions:</h3>
+  <ul>
+    {% for act in actions %}
+      <li>{{ act['timestamp'] }} - {{ act['action'] }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Collect:</h3>
+  <a href="/collect_item/Wood">Wood</a> |
+  <a href="/collect_item/Stone">Stone</a>
+  <script>
+    function getPlayerStatus() {
+        fetch('/api/player_status')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('status').innerText =
+                  `Level: ${data.level}, Score: ${data.score}, Health: ${data.health}`;
+            });
+    }
+    setInterval(getPlayerStatus, 3000);
+    </script>
+    
+    <div id="status"></div>
+    
+</body>
+</html>
